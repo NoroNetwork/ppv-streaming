@@ -32,13 +32,8 @@ webrtcAddress: :8889
 webrtcICEServers:
   - urls: [stun:stun.l.google.com:19302]
 
-# Recording
+# Recording (disabled to avoid format issues)
 record: false
-recordPath: /recordings/%path/%Y-%m-%d_%H-%M-%S-%f.mp4
-recordFormat: mp4
-recordPartDuration: 1s
-recordSegmentDuration: 1h
-recordDeleteAfter: 24h
 
 # Paths
 paths:
@@ -52,10 +47,10 @@ paths:
     # readUser: ""
     # readPass: ""
 
-    # Recording
+    # Recording (disabled)
     record: false
 
-    # Playback
+    # Playback (disabled)
     playback: false
 
   # Example protected path

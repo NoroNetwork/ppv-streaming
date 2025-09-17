@@ -1,0 +1,248 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root_password
+          MYSQL_DATABASE: ppv_streaming_test
+          MYSQL_USER: test_user
+          MYSQL_PASSWORD: test_password
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: --health-cmd="redis-cli ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    strategy:
+      matrix:
+        php-version: [8.1, 8.2, 8.3]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ matrix.php-version }}
+        extensions: pdo_mysql, redis, curl, zip, gd, xml, mbstring, openssl
+        coverage: xdebug
+        tools: composer
+
+    - name: Validate composer.json
+      run: composer validate --strict
+
+    - name: Cache Composer dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.composer/cache
+        key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+        restore-keys: ${{ runner.os }}-composer-
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress --no-suggest --optimize-autoloader
+
+    - name: Setup environment
+      run: |
+        cp .env.testing .env
+        echo "DB_HOST=127.0.0.1" >> .env
+        echo "DB_PORT=3306" >> .env
+        echo "DB_DATABASE=ppv_streaming_test" >> .env
+        echo "DB_USERNAME=test_user" >> .env
+        echo "DB_PASSWORD=test_password" >> .env
+        echo "REDIS_HOST=127.0.0.1" >> .env
+        echo "REDIS_PORT=6379" >> .env
+
+    - name: Wait for MySQL
+      run: |
+        while ! mysqladmin ping -h127.0.0.1 -P3306 -utest_user -ptest_password --silent; do
+          echo "Waiting for MySQL..."
+          sleep 2
+        done
+
+    - name: Setup database
+      run: |
+        mysql -h127.0.0.1 -P3306 -utest_user -ptest_password ppv_streaming_test < database/schema.sql
+        mysql -h127.0.0.1 -P3306 -utest_user -ptest_password ppv_streaming_test < database/security-tables.sql
+
+    - name: Run PHPUnit tests
+      run: vendor/bin/phpunit --configuration phpunit.xml --coverage-text --coverage-clover=coverage.xml
+
+    - name: Upload coverage to Codecov
+      if: matrix.php-version == '8.1'
+      uses: codecov/codecov-action@v3
+      with:
+        file: coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+
+  code-quality:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: 8.1
+        extensions: pdo_mysql, curl, zip, gd, xml, mbstring
+        tools: composer, phpcs, phpstan, psalm
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress --dev
+
+    - name: Run PHP CodeSniffer
+      run: vendor/bin/phpcs --standard=PSR12 src/ --report=checkstyle --report-file=phpcs-report.xml
+
+    - name: Run PHPStan
+      run: vendor/bin/phpstan analyse src/ --level=8 --error-format=checkstyle --no-progress > phpstan-report.xml
+
+    - name: Run Psalm
+      run: vendor/bin/psalm --output-format=github --no-progress
+
+    - name: Upload PHPCS results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: phpcs-results
+        path: phpcs-report.xml
+
+    - name: Upload PHPStan results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: phpstan-results
+        path: phpstan-report.xml
+
+  security-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: 8.1
+        extensions: pdo_mysql, curl, zip, xml
+        tools: composer
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress
+
+    - name: Run security checker
+      run: |
+        curl -H "Accept: text/plain" https://security.symfony.com/check_lock -F lock=@composer.lock
+
+    - name: Run PHP Security Checker
+      uses: StephaneBour/actions-php-security-checker@1.1
+      with:
+        composer-lock: './composer.lock'
+
+    - name: Run Snyk Security Scan
+      uses: snyk/actions/php@master
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      with:
+        args: --severity-threshold=high
+
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: 8.1
+        tools: composer
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress
+
+    - name: Check PHP syntax
+      run: find src/ -name "*.php" -exec php -l {} \;
+
+    - name: Run PHP-CS-Fixer (dry run)
+      run: vendor/bin/php-cs-fixer fix --dry-run --diff --verbose
+
+  validate-environment:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Validate .env.example
+      run: |
+        if [ ! -f .env.example ]; then
+          echo "❌ .env.example file is missing"
+          exit 1
+        fi
+
+        # Check required variables
+        required_vars="DB_HOST DB_NAME DB_USER DB_PASS JWT_SECRET APP_SECRET STRIPE_SECRET_KEY MEDIAMTX_API_URL"
+        for var in $required_vars; do
+          if ! grep -q "^${var}=" .env.example; then
+            echo "❌ Required environment variable $var is missing from .env.example"
+            exit 1
+          fi
+        done
+        echo "✅ All required environment variables found"
+
+    - name: Validate database schema
+      run: |
+        if [ ! -f database/schema.sql ]; then
+          echo "❌ database/schema.sql is missing"
+          exit 1
+        fi
+
+        if [ ! -f database/security-tables.sql ]; then
+          echo "❌ database/security-tables.sql is missing"
+          exit 1
+        fi
+        echo "✅ Database schema files found"
+
+  docker-build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: false
+        tags: ppv-streaming:test
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Test Docker image
+      run: |
+        docker run --rm ppv-streaming:test php --version
+        docker run --rm ppv-streaming:test composer --version

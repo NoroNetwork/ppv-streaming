@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.4/phpunit.xsd"
+         bootstrap="tests/bootstrap.php"
+         colors="true"
+         failOnRisky="true"
+         failOnWarning="true"
+         stopOnFailure="false"
+         executionOrder="random"
+         resolveDependencies="true"
+         beStrictAboutOutputDuringTests="true"
+         beStrictAboutTodoAnnotatedTests="true">
+
+    <testsuites>
+        <testsuite name="Unit Tests">
+            <directory>tests/Unit</directory>
+        </testsuite>
+        <testsuite name="Integration Tests">
+            <directory>tests/Integration</directory>
+        </testsuite>
+        <testsuite name="Feature Tests">
+            <directory>tests/Feature</directory>
+        </testsuite>
+    </testsuites>
+
+    <source>
+        <include>
+            <directory suffix=".php">src</directory>
+        </include>
+        <exclude>
+            <directory>vendor</directory>
+            <file>src/Core/Application.php</file>
+        </exclude>
+    </source>
+
+    <coverage includeUncoveredFiles="true"
+              processUncoveredFiles="true"
+              ignoreDeprecatedCodeUnitsFromCodeCoverage="true">
+        <report>
+            <html outputDirectory="coverage-report" lowUpperBound="50" highLowerBound="90"/>
+            <text outputFile="php://stdout" showUncoveredFiles="false"/>
+            <clover outputFile="coverage.xml"/>
+        </report>
+    </coverage>
+
+    <php>
+        <env name="APP_ENV" value="testing"/>
+        <env name="DB_HOST" value="127.0.0.1"/>
+        <env name="DB_NAME" value="ppv_streaming_test"/>
+        <env name="DB_USER" value="test_user"/>
+        <env name="DB_PASS" value="test_password"/>
+        <env name="JWT_SECRET" value="test_jwt_secret_key_for_testing_only"/>
+        <env name="APP_SECRET" value="test_app_secret_key_for_testing_only"/>
+        <env name="BCRYPT_COST" value="4"/>
+        <env name="DEBUG" value="true"/>
+        <env name="MEDIAMTX_API_URL" value="http://localhost:9997/v3"/>
+        <env name="MEDIAMTX_API_TOKEN" value="test_token"/>
+        <env name="STRIPE_SECRET_KEY" value="sk_test_fake_key"/>
+        <env name="STRIPE_WEBHOOK_SECRET" value="whsec_test_fake_secret"/>
+    </php>
+
+    <logging>
+        <junit outputFile="test-results.xml"/>
+    </logging>
+</phpunit>

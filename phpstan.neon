@@ -1,0 +1,29 @@
+parameters:
+    level: 8
+    paths:
+        - src
+    excludePaths:
+        - tests
+        - vendor
+
+    ignoreErrors:
+        # Allow dynamic property access for framework compatibility
+        - '#Access to an undefined property [a-zA-Z0-9\\_]+::\$[a-zA-Z0-9_]+#'
+
+        # Allow mixed types for request data
+        - '#Parameter \#1 \$data of method .+::validate\(\) expects array, mixed given#'
+
+        # Allow superglobals
+        - '#Variable \$_ENV might not be defined#'
+        - '#Variable \$_SERVER might not be defined#'
+        - '#Variable \$_SESSION might not be defined#'
+
+    doctrine:
+        # Allow array access on objects for data transfer
+        objectManagerLoader: null
+
+    checkMissingIterableValueType: false
+    checkGenericClassInNonGenericObjectType: false
+
+    bootstrapFiles:
+        - vendor/autoload.php

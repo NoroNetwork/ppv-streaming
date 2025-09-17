@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<psalm
+    errorLevel="3"
+    resolveFromConfigFile="true"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="https://getpsalm.org/schema/config"
+    xsi:schemaLocation="https://getpsalm.org/schema/config vendor/vimeo/psalm/config.xsd"
+    findUnusedBaselineEntry="true"
+    findUnusedCode="true"
+>
+    <projectFiles>
+        <directory name="src" />
+        <ignoreFiles>
+            <directory name="vendor" />
+            <directory name="tests" />
+        </ignoreFiles>
+    </projectFiles>
+
+    <issueHandlers>
+        <!-- Allow mixed types for request data -->
+        <MixedAssignment errorLevel="suppress" />
+        <MixedArrayAccess errorLevel="suppress" />
+
+        <!-- Allow superglobals -->
+        <UndefinedGlobalVariable>
+            <errorLevel type="suppress">
+                <referencedVariable name="$_ENV" />
+                <referencedVariable name="$_SERVER" />
+                <referencedVariable name="$_SESSION" />
+                <referencedVariable name="$_POST" />
+                <referencedVariable name="$_GET" />
+            </errorLevel>
+        </UndefinedGlobalVariable>
+
+        <!-- Allow property access for data objects -->
+        <UndefinedPropertyAssignment errorLevel="suppress" />
+        <UndefinedPropertyFetch errorLevel="suppress" />
+
+        <!-- Security-related suppressions -->
+        <ForbiddenCode>
+            <errorLevel type="error">
+                <referencedFunction name="eval" />
+                <referencedFunction name="exec" />
+                <referencedFunction name="shell_exec" />
+                <referencedFunction name="system" />
+                <referencedFunction name="passthru" />
+            </errorLevel>
+        </ForbiddenCode>
+    </issueHandlers>
+
+    <plugins>
+        <pluginClass class="Psalm\PhpUnitPlugin\Plugin"/>
+    </plugins>
+</psalm>

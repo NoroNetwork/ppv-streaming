@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+<ruleset name="PPV Streaming Platform">
+    <description>Coding standards for PPV Streaming Platform</description>
+
+    <!-- Show progress and sniff codes -->
+    <arg value="p"/>
+    <arg value="s"/>
+    <arg name="colors"/>
+    <arg name="parallel" value="8"/>
+
+    <!-- Paths to check -->
+    <file>src</file>
+
+    <!-- Paths to ignore -->
+    <exclude-pattern>vendor/*</exclude-pattern>
+    <exclude-pattern>tests/*</exclude-pattern>
+    <exclude-pattern>database/*</exclude-pattern>
+
+    <!-- Rules -->
+    <rule ref="PSR12">
+        <!-- Allow longer lines for readability -->
+        <exclude name="Generic.Files.LineLength"/>
+    </rule>
+
+    <!-- Additional rules -->
+    <rule ref="Generic.PHP.ForbiddenFunctions">
+        <properties>
+            <property name="forbiddenFunctions" type="array">
+                <element key="eval" value="null"/>
+                <element key="exec" value="null"/>
+                <element key="shell_exec" value="null"/>
+                <element key="system" value="null"/>
+                <element key="passthru" value="null"/>
+                <element key="file_get_contents" value="Use proper HTTP client"/>
+                <element key="curl_exec" value="Use Guzzle HTTP client"/>
+            </property>
+        </properties>
+    </rule>
+
+    <!-- Security rules -->
+    <rule ref="Generic.PHP.DisallowShortOpenTag"/>
+    <rule ref="Generic.Files.ByteOrderMark"/>
+
+    <!-- Line length -->
+    <rule ref="Generic.Files.LineLength">
+        <properties>
+            <property name="lineLimit" value="120"/>
+            <property name="absoluteLineLimit" value="200"/>
+        </properties>
+    </rule>
+
+    <!-- Array formatting -->
+    <rule ref="Generic.Arrays.DisallowLongArraySyntax"/>
+
+    <!-- Documentation -->
+    <rule ref="Squiz.Commenting.ClassComment">
+        <exclude name="Squiz.Commenting.ClassComment.Missing"/>
+    </rule>
+
+    <rule ref="Squiz.Commenting.FunctionComment">
+        <exclude name="Squiz.Commenting.FunctionComment.Missing"/>
+        <exclude name="Squiz.Commenting.FunctionComment.MissingParamComment"/>
+    </rule>
+</ruleset>

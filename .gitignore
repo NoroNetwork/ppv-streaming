@@ -1,0 +1,55 @@
+# Environment files
+.env
+.env.local
+
+# Dependencies
+/vendor/
+node_modules/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+/storage/logs/
+/var/log/
+
+# Cache
+/storage/cache/
+/storage/sessions/
+/bootstrap/cache/
+
+# Testing
+/coverage/
+coverage.xml
+test-results.xml
+phpcs-report.xml
+phpstan-report.xml
+
+# Build artifacts
+/build/
+/dist/
+
+# Backups
+*.backup
+*.bak
+
+# Docker volumes
+/mysql_data/
+/redis_data/
+
+# Temporary files
+/tmp/
+*.tmp
+
+# User uploads
+/public/uploads/
+!/public/uploads/.gitkeep

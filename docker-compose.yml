@@ -78,8 +78,8 @@ services:
   nginx-proxy:
     image: nginx:alpine
     ports:
-      - "80:80"
-      - "443:443"
+      - "16002:80"
+      - "16003:443"
     volumes:
       - ./docker/nginx-proxy.conf:/etc/nginx/nginx.conf
       - ./storage/ssl:/etc/ssl/certs

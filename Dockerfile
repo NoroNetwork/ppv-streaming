@@ -79,17 +79,6 @@ RUN apk add --no-cache \
     nodejs \
     npm
 
-# Install xdebug via PECL
-RUN apk add --no-cache --virtual .build-deps \
-    $PHPIZE_DEPS \
-    && pecl install xdebug \
-    && docker-php-ext-enable xdebug \
-    && apk del .build-deps
-
-# Configure xdebug
-RUN echo "xdebug.mode=coverage" > /usr/local/etc/php/conf.d/xdebug.ini \
-    && echo "xdebug.start_with_request=yes" >> /usr/local/etc/php/conf.d/xdebug.ini
-
 # Development dependencies are already included in vendor/
 
 USER app

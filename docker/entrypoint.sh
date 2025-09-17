@@ -3,11 +3,30 @@
 set -e
 
 # Wait for database
-echo "Waiting for database connection..."
-while ! nc -z $DB_HOST 3306; do
-  sleep 1
-done
-echo "Database is ready!"
+if [ -n "$DB_HOST" ]; then
+  echo "Waiting for database connection..."
+  timeout=60
+  while [ $timeout -gt 0 ]; do
+    if php -r "
+      try {
+        \$pdo = new PDO('mysql:host=$DB_HOST;port=3306', '$DB_USER', '$DB_PASS', [PDO::ATTR_TIMEOUT => 5]);
+        echo 'Database connected';
+        exit(0);
+      } catch (Exception \$e) {
+        exit(1);
+      }
+    " 2>/dev/null; then
+      echo "Database is ready!"
+      break
+    fi
+    sleep 1
+    timeout=$((timeout - 1))
+  done
+
+  if [ $timeout -eq 0 ]; then
+    echo "Database connection timeout"
+  fi
+fi
 
 # Run database migrations if needed
 if [ "$APP_ENV" = "production" ] && [ -f database/schema.sql ]; then

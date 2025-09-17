@@ -1,0 +1,67 @@
+# MediaMTX configuration for development
+
+# General
+logLevel: info
+logDestinations: [stdout]
+
+# API
+api: true
+apiAddress: :9997
+
+# Metrics
+metrics: true
+metricsAddress: :9998
+
+# RTMP
+rtmp: true
+rtmpAddress: :1935
+
+# HLS
+hls: true
+hlsAddress: :8888
+hlsAllowOrigin: "*"
+hlsVariant: lowLatency
+hlsSegmentCount: 7
+hlsSegmentDuration: 1s
+hlsPartDuration: 200ms
+hlsSegmentMaxSize: 50M
+
+# WebRTC
+webrtc: true
+webrtcAddress: :8889
+webrtcICEServers:
+  - urls: [stun:stun.l.google.com:19302]
+
+# Recording
+record: false
+recordPath: /recordings/%path/%Y-%m-%d_%H-%M-%S-%f.mp4
+recordFormat: mp4
+recordPartDuration: 1s
+recordSegmentDuration: 1h
+recordDeleteAfter: 24h
+
+# Paths
+paths:
+  all:
+    # Source
+    source: publisher
+
+    # Authentication (disabled for development)
+    # publishUser: ""
+    # publishPass: ""
+    # readUser: ""
+    # readPass: ""
+
+    # Recording
+    record: false
+
+    # Playback
+    playback: false
+
+  # Example protected path
+  secure:
+    source: publisher
+    publishUser: "streamer"
+    publishPass: "secure_password"
+    readUser: "viewer"
+    readPass: "view_password"

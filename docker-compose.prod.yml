@@ -2,40 +2,41 @@ version: '3.8'
 
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: development
+    image: ghcr.io/noronetwork/ppv-streaming:main
     ports:
-      - "8000:80"
+      - "80:80"
+      - "443:443"
     environment:
-      - APP_ENV=development
+      - APP_ENV=production
       - DB_HOST=mysql
       - DB_NAME=ppv_streaming
       - DB_USER=ppv_user
-      - DB_PASS=ppv_password
+      - DB_PASS=${DB_PASSWORD:-change_this_password}
       - REDIS_HOST=redis
       - MEDIAMTX_API_URL=http://mediamtx:9997/v3
-      - JWT_SECRET=development_jwt_secret_key_not_for_production_use_only
-      - APP_SECRET=development_app_secret_key_not_for_production_use_only
+      - JWT_SECRET=${JWT_SECRET:-change_this_jwt_secret_to_64_chars_minimum}
+      - APP_SECRET=${APP_SECRET:-change_this_app_secret_to_64_chars_minimum}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY:-sk_test_your_stripe_key}
+      - STRIPE_PUBLIC_KEY=${STRIPE_PUBLIC_KEY:-pk_test_your_stripe_key}
     volumes:
-      - .:/var/www/html
       - app_storage:/var/www/html/storage
+      - app_uploads:/var/www/html/public/uploads
     depends_on:
       mysql:
         condition: service_healthy
       redis:
         condition: service_healthy
+    restart: unless-stopped
     networks:
       - ppv-network
 
   mysql:
     image: mysql:8.0
     environment:
-      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_password_change_this}
       MYSQL_DATABASE: ppv_streaming
       MYSQL_USER: ppv_user
-      MYSQL_PASSWORD: ppv_password
+      MYSQL_PASSWORD: ${DB_PASSWORD:-change_this_password}
     ports:
       - "3306:3306"
     volumes:
@@ -45,6 +46,9 @@ services:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       timeout: 20s
       retries: 10
+      interval: 30s
+      start_period: 80s
+    restart: unless-stopped
     networks:
       - ppv-network
 
@@ -58,6 +62,8 @@ services:
       test: ["CMD", "redis-cli", "ping"]
       timeout: 20s
       retries: 10
+      interval: 30s
+    restart: unless-stopped
     networks:
       - ppv-network
 
@@ -72,19 +78,7 @@ services:
       - mediamtx_recordings:/recordings
     environment:
       - MTX_LOGLEVEL=info
-    networks:
-      - ppv-network
-
-  nginx-proxy:
-    image: nginx:alpine
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./docker/nginx-proxy.conf:/etc/nginx/nginx.conf
-      - ./storage/ssl:/etc/ssl/certs
-    depends_on:
-      - app
+    restart: unless-stopped
     networks:
       - ppv-network
 
@@ -93,6 +87,7 @@ volumes:
   redis_data:
   mediamtx_recordings:
   app_storage:
+  app_uploads:
 
 networks:
   ppv-network:

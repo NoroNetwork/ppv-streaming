@@ -44,8 +44,9 @@ COPY docker/php-fpm.conf /usr/local/etc/php-fpm.d/www.conf
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY docker/entrypoint.sh /entrypoint.sh
 
-# Set permissions
-RUN chown -R app:app /var/www/html \
+# Create necessary directories and set permissions
+RUN mkdir -p /var/log/supervisor /var/log/nginx /var/log/php \
+    && chown -R app:app /var/www/html \
     && chmod -R 755 /var/www/html \
     && chmod +x /entrypoint.sh
 

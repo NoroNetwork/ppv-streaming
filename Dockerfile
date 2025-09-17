@@ -85,7 +85,6 @@ RUN apk add --no-cache \
 RUN echo "xdebug.mode=coverage" > /usr/local/etc/php/conf.d/xdebug.ini \
     && echo "xdebug.start_with_request=yes" >> /usr/local/etc/php/conf.d/xdebug.ini
 
-# Copy development dependencies
-COPY --from=composer /app/vendor-dev vendor/
+# Development dependencies are already included in vendor/
 
 USER app

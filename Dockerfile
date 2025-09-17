@@ -3,7 +3,7 @@
 # Build stage
 FROM composer:2.6 AS composer
 WORKDIR /app
-COPY composer.json composer.lock ./
+COPY composer.json ./
 RUN composer install --no-dev --optimize-autoloader --no-scripts
 
 # Production stage

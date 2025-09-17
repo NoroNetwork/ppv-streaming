@@ -43,6 +43,13 @@ chmod -R 755 /var/www/html
 mkdir -p /var/www/html/storage/logs
 chown -R app:app /var/www/html/storage
 
+# Install dependencies in development mode
+if [ "$APP_ENV" = "development" ] && [ ! -d "/var/www/html/vendor" ]; then
+  echo "Installing development dependencies..."
+  cd /var/www/html
+  composer install --no-interaction
+fi
+
 # Clear caches in production
 if [ "$APP_ENV" = "production" ]; then
   echo "Optimizing for production..."

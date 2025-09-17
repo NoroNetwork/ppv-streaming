@@ -4,7 +4,7 @@
 FROM composer:2.6 AS composer
 WORKDIR /app
 COPY composer.json ./
-RUN composer install --no-dev --optimize-autoloader --no-scripts
+RUN composer update --no-dev --optimize-autoloader --no-scripts
 
 # Production stage
 FROM php:8.1-fpm-alpine AS production

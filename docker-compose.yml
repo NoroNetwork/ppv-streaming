@@ -75,18 +75,6 @@ services:
     networks:
       - ppv-network
 
-  nginx-proxy:
-    image: nginx:alpine
-    ports:
-      - "16002:80"
-      - "16003:443"
-    volumes:
-      - ./docker/nginx-proxy.conf:/etc/nginx/nginx.conf
-      - ./storage/ssl:/etc/ssl/certs
-    depends_on:
-      - app
-    networks:
-      - ppv-network
 
 volumes:
   mysql_data:

@@ -78,5 +78,3 @@ RUN apk add --no-cache \
     npm
 
 # Development dependencies are already included in vendor/
-
-USER app
